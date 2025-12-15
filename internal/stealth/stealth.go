@@ -6,11 +6,6 @@ import (
 	"time"
 )
 
-type Profile struct {
-	SpeedMultiplier float64 
-	JitterFactor    float64 
-}
-
 type Engine struct {
 	rng     *rand.Rand
 	profile Profile
@@ -21,6 +16,10 @@ func NewEngine(profile Profile) *Engine {
 		rng:     rand.New(rand.NewSource(time.Now().UnixNano())),
 		profile: profile,
 	}
+}
+
+func (e *Engine) Profile() Profile {
+	return e.profile
 }
 
 func (e *Engine) Before(act action.Action) {
@@ -73,7 +72,7 @@ func (e *Engine) longThink() {
 }
 
 func (e *Engine) sleepWithJitter(base time.Duration) {
-	adjustedBase := time.Duration(float64(base) * e.profile.SpeedMultiplier)
+	adjustedBase := time.Duration(float64(base) * e.profile.DelayMultiplier)
 	jitterRange := float64(adjustedBase) * e.profile.JitterFactor
 	jitter := time.Duration((e.rng.Float64()*2 - 1) * jitterRange)
 

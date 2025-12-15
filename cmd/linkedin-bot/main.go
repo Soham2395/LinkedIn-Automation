@@ -10,20 +10,20 @@ import (
 )
 
 func main() {
-	logger.Info("LinkedIn Automation Bot - Starting")
+	profile := stealth.ProfileNormal
 
-	riskEngine := risk.NewEngine(100)
-	stealthProfile := stealth.Profile{
-		SpeedMultiplier: 1.0, 
-		JitterFactor:    0.2,
-	}
-	stealthEngine := stealth.NewEngine(stealthProfile)
+	logger.Info("LinkedIn Automation Bot - Starting", "profile", "normal")
+
+	riskEngine := risk.NewEngine(profile.MaxDailyRisk)
+	stealthEngine := stealth.NewEngine(profile)
+
 	exec := executor.NewExecutor(riskEngine, stealthEngine)
+
 	searchAction := action.Action{
 		Type:       action.ActionSearchProfiles,
 		Target:     "Software Engineers in San Francisco",
 		Reason:     "Finding potential candidates for outreach",
-		RiskWeight: 0.5, // Medium risk
+		RiskWeight: 0.5,
 	}
 
 	err := exec.Execute(searchAction, func() error {
@@ -55,7 +55,7 @@ func main() {
 		Type:       action.ActionSendConnection,
 		Target:     "john-doe",
 		Reason:     "Expanding professional network",
-		RiskWeight: 0.8, 
+		RiskWeight: 0.8,
 	}
 
 	err = exec.Execute(connectAction, func() error {
