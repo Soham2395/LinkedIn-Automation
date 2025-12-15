@@ -2,65 +2,85 @@ package stealth
 
 import (
 	"linkedin-automation/internal/action"
-	"linkedin-automation/internal/logger"
 	"math/rand"
 	"time"
 )
 
-type Engine struct {
-	rng *rand.Rand
+type Profile struct {
+	SpeedMultiplier float64 
+	JitterFactor    float64 
 }
 
-func NewEngine() *Engine {
+type Engine struct {
+	rng     *rand.Rand
+	profile Profile
+}
+
+func NewEngine(profile Profile) *Engine {
 	return &Engine{
-		rng: rand.New(rand.NewSource(time.Now().UnixNano())),
+		rng:     rand.New(rand.NewSource(time.Now().UnixNano())),
+		profile: profile,
 	}
 }
 
 func (e *Engine) Before(act action.Action) {
-	logger.Info("Stealth: Applying pre-action behavior", "action", act.Type)
-
-	var baseDelay time.Duration
-
 	switch act.Type {
 	case action.ActionSearchProfiles:
-		baseDelay = 1500 * time.Millisecond
+		e.shortHesitation()
 	case action.ActionPaginateSearch:
-		baseDelay = 1 * time.Second
+		e.mediumPause()
 	case action.ActionVisitProfile:
-		baseDelay = 800 * time.Millisecond
+		e.shortHesitation()
 	case action.ActionSendConnection:
-		baseDelay = 2500 * time.Millisecond
+		e.mediumPause()
 	case action.ActionSendMessage:
-		baseDelay = 4 * time.Second
+		e.longThink()
 	default:
-		baseDelay = 500 * time.Millisecond
+		e.shortHesitation()
 	}
-
-	jitter := time.Duration(float64(baseDelay) * (0.8 + 0.4*e.rng.Float64()))
-	time.Sleep(jitter)
 }
 
 func (e *Engine) After(act action.Action) {
-	logger.Info("Stealth: Applying post-action behavior", "action", act.Type)
-
-	var baseDelay time.Duration
-
 	switch act.Type {
 	case action.ActionSearchProfiles:
-		baseDelay = 3 * time.Second
+		e.mediumPause()
 	case action.ActionPaginateSearch:
-		baseDelay = 2 * time.Second
+		e.mediumPause()
 	case action.ActionVisitProfile:
-		baseDelay = 8 * time.Second
+		e.longThink()
 	case action.ActionSendConnection:
-		baseDelay = 1500 * time.Millisecond
+		e.shortHesitation()
 	case action.ActionSendMessage:
-		baseDelay = 3 * time.Second
+		e.mediumPause()
 	default:
-		baseDelay = 1 * time.Second
+		e.shortHesitation()
+	}
+}
+
+func (e *Engine) shortHesitation() {
+	base := 500 * time.Millisecond
+	e.sleepWithJitter(base)
+}
+
+func (e *Engine) mediumPause() {
+	base := 2 * time.Second
+	e.sleepWithJitter(base)
+}
+
+func (e *Engine) longThink() {
+	base := 5 * time.Second
+	e.sleepWithJitter(base)
+}
+
+func (e *Engine) sleepWithJitter(base time.Duration) {
+	adjustedBase := time.Duration(float64(base) * e.profile.SpeedMultiplier)
+	jitterRange := float64(adjustedBase) * e.profile.JitterFactor
+	jitter := time.Duration((e.rng.Float64()*2 - 1) * jitterRange)
+
+	finalDelay := adjustedBase + jitter
+	if finalDelay < 0 {
+		finalDelay = 0
 	}
 
-	jitter := time.Duration(float64(baseDelay) * (0.8 + 0.4*e.rng.Float64()))
-	time.Sleep(jitter)
+	time.Sleep(finalDelay)
 }
