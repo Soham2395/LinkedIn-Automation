@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"strings"
+	"time"
 
 	"linkedin-automation/internal/action"
 	"linkedin-automation/internal/browser"
@@ -149,7 +150,7 @@ func performLogin(
 			return err
 		}
 
-		if !isLoggedIn(b) {
+		if !waitForLogin(b) {
 			return ErrLoginFailed
 		}
 
@@ -177,17 +178,36 @@ func detectCheckpoint(b *browser.Browser) error {
 	return nil
 }
 
+func waitForLogin(b *browser.Browser) bool {
+	for i := 0; i < 15; i++ {
+		if isLoggedIn(b) {
+			return true
+		}
+		time.Sleep(1 * time.Second)
+	}
+	return false
+}
+
 func isLoggedIn(b *browser.Browser) bool {
 	url := b.URL()
-	if strings.Contains(url, "/feed") {
+	if strings.Contains(url, "/feed") || strings.Contains(url, "/in/") {
 		return true
 	}
-	if b.HasElement(".global-nav__me") {
-		return true
+
+	selectors := []string{
+		".global-nav__me",
+		"[data-test-id='nav-menu']",
+		"#global-nav-typeahead",
+		".global-nav__content",
+		"button.global-nav__primary-link",
 	}
-	if b.HasElement("[data-test-id='nav-menu']") {
-		return true
+
+	for _, s := range selectors {
+		if b.HasElement(s) {
+			return true
+		}
 	}
+
 	return false
 }
 

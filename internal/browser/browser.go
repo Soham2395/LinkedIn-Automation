@@ -16,6 +16,11 @@ type Browser struct {
 
 func New(headless bool) (*Browser, error) {
 	l := launcher.New().Headless(headless)
+
+	if path, exists := launcher.LookPath(); exists {
+		l = l.Bin(path)
+	}
+
 	url := l.MustLaunch()
 
 	browser := rod.New().ControlURL(url).MustConnect()
