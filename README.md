@@ -13,6 +13,6 @@ Proof of Concept for a LinkedIn automation bot in Go.
 1. Copy `.env.example` to `.env` and fill in credentials.
 2. Run `go run cmd/linkedin-bot/main.go`
 
-##Screen Recording
+## Screen Recording
 
 https://drive.google.com/file/d/1ILYcUoHAljxYYb76lBN6uTY2LgdftcSz/view?usp=sharing
